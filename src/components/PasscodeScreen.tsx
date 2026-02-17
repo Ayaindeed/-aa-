@@ -6,7 +6,7 @@ interface PasscodeScreenProps {
   onSuccess: () => void;
 }
 
-const CORRECT_CODE = '1423';
+const CORRECT_CODE = import.meta.env.VITE_APP_PASSCODE || '1423';
 
 const PasscodeScreen = ({ onSuccess }: PasscodeScreenProps) => {
   const [code, setCode] = useState('');
