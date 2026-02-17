@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Analytics } from '@vercel/analytics/react';
 import PasscodeScreen from './components/PasscodeScreen';
 import CoffeeLoading from './components/CoffeeLoading';
 import UserSelection from './components/UserSelection';
@@ -657,6 +658,7 @@ function App() {
           </>
         )}
       </AnimatePresence>
+      <Analytics />
     </div>
   );
 }
