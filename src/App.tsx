@@ -16,7 +16,7 @@ import {
   saveFeedback,
 } from './lib/supabase';
 import type { Activity, Feedback, User } from './types';
-import { Heart, Dices, LayoutGrid, ClipboardList, Coffee, Sparkles, ArrowRightLeft, Flame, Clapperboard, Car, SmilePlus, Trash2, AlertTriangle } from 'lucide-react';
+import { Heart, Dices, LayoutGrid, ClipboardList, Coffee, ArrowRightLeft, Flame, Clapperboard, Car, SmilePlus, Trash2 } from 'lucide-react';
 import './index.css';
 
 type View = 'spin' | 'grid' | 'activities';
