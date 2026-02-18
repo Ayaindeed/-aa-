@@ -10,6 +10,8 @@ import AlphabetGrid from './components/AlphabetGrid';
 import ActivityCard from './components/ActivityCard';
 import ActivityForm from './components/ActivityForm';
 import FeedbackModal from './components/FeedbackModal';
+import CalendarView from './components/CalendarView';
+import PhotoGallery from './components/PhotoGallery';
 import {
   getActivities,
   saveActivity,
@@ -17,10 +19,10 @@ import {
   saveFeedback,
 } from './lib/supabase';
 import type { Activity, Feedback, User } from './types';
-import { Heart, Dices, LayoutGrid, ClipboardList, Coffee, ArrowRightLeft, Flame, Clapperboard, Car, SmilePlus, Trash2 } from 'lucide-react';
+import { Heart, Dices, LayoutGrid, ClipboardList, Coffee, ArrowRightLeft, Flame, Clapperboard, Car, SmilePlus, Trash2, Calendar } from 'lucide-react';
 import './index.css';
 
-type View = 'spin' | 'grid' | 'activities';
+type View = 'spin' | 'grid' | 'activities' | 'calendar';
 
 // Funny romantic messages for the switch popup
 const switchMessages = [
@@ -45,6 +47,7 @@ function App() {
   const [deletingActivity, setDeletingActivity] = useState<Activity | null>(null);
   const [showSwitchPopup, setShowSwitchPopup] = useState(false);
   const [switchMessage] = useState(() => switchMessages[Math.floor(Math.random() * switchMessages.length)]);
+  const [viewingPhotos, setViewingPhotos] = useState<Activity | null>(null);
 
   // No caching — always ask "Who's brewing today?" on every visit
 
@@ -94,7 +97,7 @@ function App() {
     }
   };
 
-  const handleCreateActivity = async (name: string) => {
+  const handleCreateActivity = async (name: string, photos?: string[]) => {
     if (!selectedLetter) return;
 
     const newActivity: Activity = {
@@ -104,6 +107,7 @@ function App() {
       isCompleted: false,
       feedbacks: [],
       createdAt: new Date().toISOString(),
+      photos: photos || [],
     };
 
     await saveActivity(newActivity);
@@ -140,12 +144,13 @@ function App() {
     setShowActivityForm(true);
   };
 
-  const handleUpdateActivity = async (name: string) => {
+  const handleUpdateActivity = async (name: string, photos?: string[]) => {
     if (!editingActivity) return;
 
     const updatedActivity: Activity = {
       ...editingActivity,
       name,
+      photos: photos !== undefined ? photos : editingActivity.photos,
     };
 
     await saveActivity(updatedActivity);
@@ -193,6 +198,29 @@ function App() {
     setFeedbackActivity(null);
   };
 
+  const handleViewPhotos = (activity: Activity) => {
+    setViewingPhotos(activity);
+  };
+
+  const handleDeletePhoto = async (photoIndex: number) => {
+    if (!viewingPhotos || !viewingPhotos.photos) return;
+    
+    const updatedPhotos = viewingPhotos.photos.filter((_, index) => index !== photoIndex);
+    const updatedActivity: Activity = {
+      ...viewingPhotos,
+      photos: updatedPhotos,
+    };
+    
+    await saveActivity(updatedActivity);
+    await loadActivities();
+    setViewingPhotos(updatedActivity);
+    
+    // Close gallery if no more photos
+    if (updatedPhotos.length === 0) {
+      setViewingPhotos(null);
+    }
+  };
+
   const usedLetters = activities.map(a => a.letter);
   const completedActivities = activities.filter(a => a.isCompleted);
   const pendingActivities = activities.filter(a => !a.isCompleted);
@@ -224,6 +252,7 @@ function App() {
               { id: 'spin' as View, label: 'Spin', Icon: Dices },
               { id: 'grid' as View, label: 'Grid', Icon: LayoutGrid },
               { id: 'activities' as View, label: 'Activities', Icon: ClipboardList },
+              { id: 'calendar' as View, label: 'Calendar', Icon: Calendar },
             ].map(tab => {
               const isActive = currentView === tab.id;
               return (
@@ -402,6 +431,7 @@ function App() {
                             onAddFeedback={handleAddFeedback}
                             onDelete={handleDeleteActivity}
                             onEdit={handleEditActivity}
+                            onViewPhotos={handleViewPhotos}
                           />
                         ))}
                       </div>
@@ -427,6 +457,7 @@ function App() {
                             onAddFeedback={handleAddFeedback}
                             onDelete={handleDeleteActivity}
                             onEdit={handleEditActivity}
+                            onViewPhotos={handleViewPhotos}
                           />
                         ))}
                       </div>
@@ -434,6 +465,19 @@ function App() {
                   )}
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {/* Calendar View */}
+          {currentView === 'calendar' && (
+            <motion.div
+              key="calendar"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className="w-full"
+            >
+              <CalendarView activities={activities} onActivityClick={handleViewPhotos} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -472,6 +516,7 @@ function App() {
         onSave={editingActivity ? handleUpdateActivity : handleCreateActivity}
         initialValue={editingActivity?.name || ''}
         isEdit={!!editingActivity}
+        initialPhotos={editingActivity?.photos || []}
       />
 
       {/* Feedback Modal */}
@@ -658,6 +703,20 @@ function App() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Photo Gallery */}
+      <AnimatePresence>
+        {viewingPhotos && viewingPhotos.photos && viewingPhotos.photos.length > 0 && (
+          <PhotoGallery
+            photos={viewingPhotos.photos}
+            activityName={viewingPhotos.name}
+            onClose={() => setViewingPhotos(null)}
+            onDeletePhoto={handleDeletePhoto}
+            canEdit={true}
+          />
+        )}
+      </AnimatePresence>
+
       <Analytics />
     </div>
   );

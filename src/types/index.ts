@@ -8,6 +8,7 @@ export interface Activity {
   completedDate?: string;
   feedbacks: Feedback[];
   createdAt: string;
+  photos?: string[]; // Array of photo URLs or base64 strings
 }
 
 export interface Feedback {

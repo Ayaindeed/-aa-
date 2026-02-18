@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { CheckCircle, Clock, MessageCircle, Star, Calendar, Trash2, Sparkles, Pencil } from 'lucide-react';
+import { CheckCircle, Clock, MessageCircle, Star, Calendar, Trash2, Sparkles, Pencil, Image } from 'lucide-react';
 import type { Activity, User } from '../types';
+import { useState } from 'react';
 
 interface ActivityCardProps {
   activity: Activity;
@@ -9,12 +10,13 @@ interface ActivityCardProps {
   onAddFeedback: (activity: Activity) => void;
   onDelete: (activity: Activity) => void;
   onEdit: (activity: Activity) => void;
+  onViewPhotos?: (activity: Activity) => void;
 }
 
 const AMR_COLOR = '#DC2626';
 const ASEI_COLOR = '#1a1a1a';
 
-const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDelete, onEdit }: ActivityCardProps) => {
+const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDelete, onEdit, onViewPhotos }: ActivityCardProps) => {
   const amrFeedback = activity.feedbacks.find(f => f.user === 'AMR');
   const aseiFeedback = activity.feedbacks.find(f => f.user === 'ASEI');
   const currentUserFeedback = activity.feedbacks.find(f => f.user === currentUser);
@@ -156,6 +158,42 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
               ) : (
                 <p className="text-xs text-[#B8A08A] pl-6 italic">Awaiting thoughts...</p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Photo Gallery Section */}
+        {activity.photos && activity.photos.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Image size={14} style={{ color: '#6F4E37' }} />
+              <span className="text-xs font-semibold" style={{ color: '#6F4E37' }}>
+                {activity.photos.length} {activity.photos.length === 1 ? 'Photo' : 'Photos'}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {activity.photos.slice(0, 3).map((photo, index) => (
+                <motion.button
+                  key={index}
+                  onClick={() => onViewPhotos && onViewPhotos(activity)}
+                  className="relative aspect-square rounded-lg overflow-hidden"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <img
+                    src={photo}
+                    alt={`${activity.name} photo ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {index === 2 && activity.photos.length > 3 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">
+                        +{activity.photos.length - 3}
+                      </span>
+                    </div>
+                  )}
+                </motion.button>
+              ))}
             </div>
           </div>
         )}

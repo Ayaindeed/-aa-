@@ -1,39 +1,60 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useState } from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, Upload, Image as ImageIcon } from 'lucide-react';
 import { activitySuggestions } from '../types';
 
 interface ActivityFormProps {
   isOpen: boolean;
   letter: string;
   onClose: () => void;
-  onSave: (name: string) => void;
+  onSave: (name: string, photos?: string[]) => void;
   initialValue?: string;
   isEdit?: boolean;
+  initialPhotos?: string[];
 }
 
-const ActivityForm = ({ isOpen, letter, onClose, onSave, initialValue = '', isEdit = false }: ActivityFormProps) => {
+const ActivityForm = ({ isOpen, letter, onClose, onSave, initialValue = '', isEdit = false, initialPhotos = [] }: ActivityFormProps) => {
   const [activityName, setActivityName] = useState(initialValue);
+  const [photos, setPhotos] = useState<string[]>(initialPhotos);
   const suggestions = activitySuggestions[letter] || [];
 
   // Reset form when opening with new initialValue
   React.useEffect(() => {
     if (isOpen) {
       setActivityName(initialValue);
+      setPhotos(initialPhotos);
     }
-  }, [isOpen, initialValue]);
+  }, [isOpen, initialValue, initialPhotos]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activityName.trim()) {
-      onSave(activityName.trim());
+      onSave(activityName.trim(), photos);
       setActivityName('');
+      setPhotos([]);
       onClose();
     }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setActivityName(suggestion);
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotos((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -157,6 +178,60 @@ const ActivityForm = ({ isOpen, letter, onClose, onSave, initialValue = '', isEd
                       </div>
                     </div>
                   )}
+
+                  {/* Photo Upload (Optional) */}
+                  <div className="mb-5">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <ImageIcon size={13} className="text-[#D4A574]" />
+                      <span className="text-[11px] font-semibold text-[#8B7355] uppercase tracking-wider">Photos (Optional)</span>
+                    </div>
+                    
+                    {/* Upload Button */}
+                    <label className="block">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                      <motion.div
+                        className="px-4 py-3 rounded-xl text-sm cursor-pointer text-center transition-all font-medium border-2 border-dashed"
+                        style={{
+                          background: 'rgba(245, 230, 211, 0.3)',
+                          color: '#6F4E37',
+                          borderColor: 'rgba(212, 165, 116, 0.3)',
+                        }}
+                        whileHover={{ scale: 1.02, borderColor: 'rgba(212, 165, 116, 0.5)' }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Upload size={18} className="inline mr-2" />
+                        Upload Photos
+                      </motion.div>
+                    </label>
+
+                    {/* Photo Previews */}
+                    {photos.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mt-3">
+                        {photos.map((photo, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={photo}
+                              alt={`Upload ${index + 1}`}
+                              className="w-full aspect-square object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePhoto(index)}
+                              className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Actions */}
                   <div className="flex gap-2 justify-end pt-1">
