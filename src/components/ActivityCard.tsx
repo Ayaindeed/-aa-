@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, MessageCircle, Star, Calendar, Trash2, Sparkles, Pencil, Image } from 'lucide-react';
 import type { Activity, User } from '../types';
-import { useState } from 'react';
 
 interface ActivityCardProps {
   activity: Activity;
@@ -185,7 +184,7 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
                     alt={`${activity.name} photo ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
-                  {index === 2 && activity.photos.length > 3 && (
+                  {index === 2 && activity.photos && activity.photos.length > 3 && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="text-white font-bold text-sm">
                         +{activity.photos.length - 3}
