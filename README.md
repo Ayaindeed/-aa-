@@ -9,7 +9,7 @@ A beautiful, minimalist web application for couples to track their alphabet dati
 - **Vite** - Fast build tool
 - **Tailwind CSS 4** - Utility-first styling
 - **Framer Motion** - Smooth animations
-- **Supabase** - Database (optional, falls back to localStorage)
+- **Supabase** - Database
 - **Lucide React** - Beautiful icons
 
 ---
