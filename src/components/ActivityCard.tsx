@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { CheckCircle, Clock, MessageCircle, Star, Calendar, Trash2, Sparkles, Pencil, Image } from 'lucide-react';
+import { CheckCircle, Clock, MessageCircle, Star, Calendar, Trash2, Sparkles, Pencil, Image, Upload } from 'lucide-react';
+import { useState, useRef } from 'react';
 import type { Activity, User } from '../types';
 
 interface ActivityCardProps {
@@ -10,15 +11,18 @@ interface ActivityCardProps {
   onDelete: (activity: Activity) => void;
   onEdit: (activity: Activity) => void;
   onViewPhotos?: (activity: Activity) => void;
+  onAddPhotos?: (activity: Activity, photos: string[]) => void;
 }
 
 const AMR_COLOR = '#DC2626';
 const ASEI_COLOR = '#1a1a1a';
 
-const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDelete, onEdit, onViewPhotos }: ActivityCardProps) => {
+const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDelete, onEdit, onViewPhotos, onAddPhotos }: ActivityCardProps) => {
   const amrFeedback = activity.feedbacks.find(f => f.user === 'AMR');
   const aseiFeedback = activity.feedbacks.find(f => f.user === 'ASEI');
   const currentUserFeedback = activity.feedbacks.find(f => f.user === currentUser);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -30,6 +34,37 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
         strokeWidth={1.5}
       />
     ));
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !onAddPhotos) return;
+
+    setIsUploadingPhoto(true);
+    const newPhotos: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      
+      await new Promise<void>((resolve) => {
+        reader.onloadend = () => {
+          if (reader.result) {
+            newPhotos.push(reader.result as string);
+          }
+          resolve();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    onAddPhotos(activity, newPhotos);
+    setIsUploadingPhoto(false);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -59,12 +94,12 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
         }}
       />
 
-      <div className="p-5 sm:p-6">
+      <div className="p-4 sm:p-5 lg:p-6">
         {/* Header row: Letter badge + Title + Status */}
-        <div className="flex items-start gap-3.5 mb-4">
+        <div className="flex items-start gap-3 sm:gap-3.5 mb-3 sm:mb-4">
           {/* Letter Badge — circular */}
           <motion.div
-            className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm"
+            className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-sm"
             style={{
               background: activity.isCompleted
                 ? 'linear-gradient(135deg, #059669, #047857)'
@@ -73,7 +108,7 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
             whileHover={{ scale: 1.08, rotate: 3 }}
           >
             <span
-              className="text-lg font-bold text-white"
+              className="text-base sm:text-lg font-bold text-white"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
               {activity.letter}
@@ -83,7 +118,7 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
           {/* Title & Date */}
           <div className="flex-1 min-w-0">
             <h3
-              className="text-lg font-bold truncate pr-6"
+              className="text-base sm:text-lg font-bold truncate pr-4 sm:pr-6"
               style={{ fontFamily: "'Playfair Display', serif", color: '#2C1810' }}
             >
               {activity.name}
@@ -162,14 +197,45 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
         )}
 
         {/* Photo Gallery Section */}
-        {activity.photos && activity.photos.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
+        <div className="mb-4">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
               <Image size={14} style={{ color: '#6F4E37' }} />
               <span className="text-xs font-semibold" style={{ color: '#6F4E37' }}>
-                {activity.photos.length} {activity.photos.length === 1 ? 'Photo' : 'Photos'}
+                {activity.photos && activity.photos.length > 0
+                  ? `${activity.photos.length} ${activity.photos.length === 1 ? 'Photo' : 'Photos'}`
+                  : 'No photos yet'}
               </span>
             </div>
+            {onAddPhotos && (
+              <motion.button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  background: isUploadingPhoto ? 'rgba(212, 165, 116, 0.2)' : 'rgba(212, 165, 116, 0.1)',
+                  color: '#6F4E37',
+                  border: '1px solid rgba(212, 165, 116, 0.3)',
+                }}
+                whileHover={!isUploadingPhoto ? { scale: 1.05, background: 'rgba(212, 165, 116, 0.2)' } : {}}
+                whileTap={!isUploadingPhoto ? { scale: 0.95 } : {}}
+              >
+                <Upload size={12} />
+                <span>{isUploadingPhoto ? 'Uploading...' : 'Add'}</span>
+              </motion.button>
+            )}
+          </div>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handlePhotoUpload}
+            className="hidden"
+          />
+
+          {activity.photos && activity.photos.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
               {activity.photos.slice(0, 3).map((photo, index) => (
                 <motion.button
@@ -194,8 +260,8 @@ const ActivityCard = ({ activity, currentUser, onComplete, onAddFeedback, onDele
                 </motion.button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Actions — refined buttons */}
         <div className="flex items-center gap-2 pt-2 border-t border-[#E8D4D4]/60">

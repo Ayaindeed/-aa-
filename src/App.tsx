@@ -26,9 +26,7 @@ type View = 'spin' | 'grid' | 'activities' | 'calendar';
 
 // Funny romantic messages for the switch popup
 const switchMessages = [
-  { text: "Leaving so soon?", sub: "Don't worry, your partner will take good care of things...", icon: SmilePlus },
   { text: "Switching sides?", sub: "Remember, love isn't a competition... or is it?", icon: Heart },
-  { text: "Tag team!", sub: "One down, one to go. The alphabet waits for no one!", icon: ArrowRightLeft },
   { text: "Passing the torch", sub: "Let's see who plans the better date this time!", icon: Flame },
   { text: "Plot twist!", sub: "The other half enters the chat...", icon: Clapperboard },
   { text: "Switching drivers!", sub: "Hope the other one doesn't crash our date plans!", icon: Car },
@@ -219,6 +217,17 @@ function App() {
     if (updatedPhotos.length === 0) {
       setViewingPhotos(null);
     }
+  };
+
+  const handleAddPhotos = async (activity: Activity, newPhotos: string[]) => {
+    const existingPhotos = activity.photos || [];
+    const updatedActivity: Activity = {
+      ...activity,
+      photos: [...existingPhotos, ...newPhotos],
+    };
+    
+    await saveActivity(updatedActivity);
+    await loadActivities();
   };
 
   const usedLetters = activities.map(a => a.letter);
@@ -421,7 +430,7 @@ function App() {
                       >
                         Upcoming Adventures
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-6xl mx-auto">
                         {pendingActivities.map(activity => (
                           <ActivityCard
                             key={activity.id}
@@ -432,6 +441,7 @@ function App() {
                             onDelete={handleDeleteActivity}
                             onEdit={handleEditActivity}
                             onViewPhotos={handleViewPhotos}
+                            onAddPhotos={handleAddPhotos}
                           />
                         ))}
                       </div>
@@ -447,7 +457,7 @@ function App() {
                       >
                         Beautiful Memories
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-6xl mx-auto">
                         {completedActivities.map(activity => (
                           <ActivityCard
                             key={activity.id}
@@ -458,6 +468,7 @@ function App() {
                             onDelete={handleDeleteActivity}
                             onEdit={handleEditActivity}
                             onViewPhotos={handleViewPhotos}
+                            onAddPhotos={handleAddPhotos}
                           />
                         ))}
                       </div>
