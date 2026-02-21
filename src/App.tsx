@@ -19,7 +19,7 @@ import {
   saveFeedback,
 } from './lib/supabase';
 import type { Activity, Feedback, User } from './types';
-import { Heart, Dices, LayoutGrid, ClipboardList, Coffee, ArrowRightLeft, Flame, Clapperboard, Car, SmilePlus, Trash2, Calendar } from 'lucide-react';
+import { Heart, Dices, LayoutGrid, ClipboardList, Coffee, Flame, Clapperboard, Car, Trash2, Calendar } from 'lucide-react';
 import './index.css';
 
 type View = 'spin' | 'grid' | 'activities' | 'calendar';
